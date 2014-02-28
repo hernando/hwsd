@@ -23,15 +23,12 @@ set(SOURCES
   hwsd.cpp
   nodeInfo.cpp
   version.cpp
+  net/hostAddress.cpp
+  net/subnetAddress.cpp
 )
 
 list(APPEND LINK_LIBRARIES ${LUNCHBOX_LIBRARIES})
 list(APPEND LINK_LIBRARIES ${Boost_REGEX_LIBRARY})
-
-if(QT_QTNETWORK_FOUND)
-  include(${QT_USE_FILE})
-  list(APPEND LINK_LIBRARIES ${QT_LIBRARIES})
-endif()
 
 set(LIBRARY hwsd)
 set(INCLUDE include/${LIBRARY})

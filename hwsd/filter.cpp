@@ -18,12 +18,9 @@
 #include "filter.h"
 #include "gpuInfo.h"
 #include "netInfo.h"
+#include "net/subnetAddress.h"
 
 #include <boost/regex.hpp>
-
-#ifdef HWSD_USE_QT4
-#  include <QtNetwork/QHostAddress>
-#endif
 
 #include <algorithm>
 
@@ -244,28 +241,22 @@ bool NetFilter::operator() ( const hwsd::NetInfos& current,
     if( impl_->type != NetInfo::TYPE_ALL && !( impl_->type & candidate.type ))
         return false;
 
-#ifdef HWSD_USE_QT4
-    QHostAddress address4( QString::fromStdString( candidate.inetAddress ));
-    QHostAddress address6( QString::fromStdString( candidate.inet6Address ));
+    net::HostAddress address4( candidate.inetAddress );
+    net::HostAddress address6( candidate.inet6Address );
     bool isInSubnet = impl_->prefixes.empty();
     for( lunchbox::StringsCIter j = impl_->prefixes.begin();
          j != impl_->prefixes.end(); ++j )
     {
-        const QString prefixStr = QString::fromStdString( *j );
-        const QPair< QHostAddress, int > subnet =
-                                     QHostAddress::parseSubnet( prefixStr );
-        if( address4.isInSubnet( subnet ) || address6.isInSubnet( subnet ))
+        net::SubnetAddress subnet( *j );
+        if( !subnet )
+            continue;
+
+        if( subnet.isInSubnet( address4 ) || subnet.isInSubnet( address6 ))
         {
             isInSubnet = true;
             break;
         }
     }
-#else
-    if( !impl_->prefixes.empty( ))
-        LBWARN << "Ignoring prefix filter, QtNetwork not available"
-               << std::endl;
-    const bool isInSubnet = true;
-#endif
 
     if( isInSubnet )
         return Filter::operator()( current, candidate );
